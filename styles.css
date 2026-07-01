@@ -15,8 +15,8 @@
 
 * { box-sizing: border-box; }
 
-html, body { height: 100%; overflow-x: hidden; }
-body { margin: 0; background: var(--bg); color: var(--text); }
+html { height: 100%; overflow-x: hidden; }
+body { margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; touch-action: pan-y pinch-zoom; }
 
 img { display: block; max-width: 100%; }
 a { color: inherit; text-decoration: none; }
@@ -552,7 +552,7 @@ body.checkout-open .topbar { display: none; }
   .timer { width: auto; justify-content: center; gap: 8px; margin-left: 0; }
   .timer strong { min-width: 42px; padding: 5px 8px; font-size: 22px; }
   .timer small { margin-top: 3px; font-size: 10px; }
-  .benefit-ticker { order: 2; margin: -2px 0 12px; width: 100vw; position: relative; left: 50%; right: 50%; transform: translateX(-50%); }
+  .benefit-ticker { order: 2; margin: -2px 0 12px; width: 100%; }
   .gallery { order: 3; }
   .details h1 { order: 4; margin: 0 0 8px; font-size: clamp(28px, 7vw, 38px); }
   .price-row { order: 5; }
