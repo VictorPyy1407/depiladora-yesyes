@@ -164,11 +164,7 @@ function trackMeta(eventName, payload = trackingPayload()) {
 }
 
 function trackMetaPageView() {
-  if (typeof window.fbq !== 'function') {
-    sendMetaFallback('PageView');
-    return;
-  }
-  window.fbq('trackSingle', CONFIG.metaPixelId, 'PageView');
+  // PageView is already fired by the Meta Pixel snippet in index.html.
 }
 
 function trackLandingEvent(eventName, payload = trackingPayload()) {
