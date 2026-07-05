@@ -126,6 +126,22 @@ function metaPayload(payload) {
   };
 }
 
+function sendMetaFallback(eventName, payload = trackingPayload()) {
+  const eventPayload = metaPayload(payload);
+  const params = new URLSearchParams({
+    id: CONFIG.metaPixelId,
+    ev: eventName,
+    dl: window.location.href,
+    rl: document.referrer || '',
+    if: 'false',
+    ts: String(Date.now()),
+    cd: JSON.stringify(eventPayload),
+  });
+
+  const img = new Image();
+  img.src = `https://www.facebook.com/tr?${params.toString()}`;
+}
+
 function fireTracking(key, callback) {
   if (trackingFired.has(key)) return;
   trackingFired.add(key);
@@ -139,14 +155,20 @@ function trackGA(eventName, payload = trackingPayload()) {
 }
 
 function trackMeta(eventName, payload = trackingPayload()) {
-  if (typeof window.fbq !== 'function') return;
+  if (typeof window.fbq !== 'function') {
+    sendMetaFallback(eventName, payload);
+    return;
+  }
   const options = payload.transaction_id ? { eventID: payload.transaction_id } : undefined;
-  window.fbq('track', eventName, metaPayload(payload), options);
+  window.fbq('trackSingle', CONFIG.metaPixelId, eventName, metaPayload(payload), options);
 }
 
 function trackMetaPageView() {
-  if (typeof window.fbq !== 'function') return;
-  window.fbq('track', 'PageView');
+  if (typeof window.fbq !== 'function') {
+    sendMetaFallback('PageView');
+    return;
+  }
+  window.fbq('trackSingle', CONFIG.metaPixelId, 'PageView');
 }
 
 function trackLandingEvent(eventName, payload = trackingPayload()) {
