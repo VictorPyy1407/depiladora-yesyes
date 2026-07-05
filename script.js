@@ -4,6 +4,7 @@ const CONFIG = {
   productName: 'Depiladora YES',
   productPrice: 149000,
   currency: 'PYG',
+  metaPixelId: '2412226475899711',
   origin: 'landing_depiladora_yes',
   supabaseUrl: 'https://roruinqorwgolcrhhmpm.supabase.co',
   supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvcnVpbnFvcndnb2xjcmhobXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NTU0MDcsImV4cCI6MjA5ODIzMTQwN30.VzNSqYUM6amTOToZUsJ7Emjapy-y9Y44hDmbC1XG9Eg',
@@ -143,10 +144,16 @@ function trackMeta(eventName, payload = trackingPayload()) {
   window.fbq('track', eventName, metaPayload(payload), options);
 }
 
+function trackMetaPageView() {
+  if (typeof window.fbq !== 'function') return;
+  window.fbq('track', 'PageView');
+}
+
 function trackLandingEvent(eventName, payload = trackingPayload()) {
   const events = {
     page_view: () => {
       fireTracking('ga4:page_view', () => trackGA('page_view', payload));
+      fireTracking('meta:PageView', () => trackMetaPageView());
     },
     view_item: () => {
       fireTracking('ga4:view_item', () => trackGA('view_item', payload));
