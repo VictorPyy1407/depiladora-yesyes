@@ -109,12 +109,19 @@ function trackingPayload(quantity = Number(document.querySelector('#quantitySele
 }
 
 function metaPayload(payload) {
+  const quantity = Number(payload.cantidad || payload.quantity || 1);
+  const value = Number(payload.subtotal || payload.value || CONFIG.productPrice * quantity);
+
   return {
     content_name: CONFIG.productName,
     content_type: 'product',
-    value: payload.subtotal,
+    content_ids: [CONFIG.origin],
+    contents: [{ id: CONFIG.origin, quantity, item_price: CONFIG.productPrice }],
+    value,
     currency: CONFIG.currency,
-    quantity: payload.cantidad,
+    quantity,
+    num_items: quantity,
+    order_id: payload.transaction_id,
   };
 }
 
@@ -131,7 +138,9 @@ function trackGA(eventName, payload = trackingPayload()) {
 }
 
 function trackMeta(eventName, payload = trackingPayload()) {
-  if (typeof window.fbq === 'function') window.fbq('track', eventName, metaPayload(payload));
+  if (typeof window.fbq !== 'function') return;
+  const options = payload.transaction_id ? { eventID: payload.transaction_id } : undefined;
+  window.fbq('track', eventName, metaPayload(payload), options);
 }
 
 function trackLandingEvent(eventName, payload = trackingPayload()) {
