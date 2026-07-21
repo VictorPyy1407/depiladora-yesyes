@@ -656,6 +656,255 @@ h1 { margin: 0 0 17px; font-size: clamp(38px, 4vw, 48px); line-height: 1; letter
   font-weight: 800;
 }
 
+/* ============ STEP 3 · Confirmación visual ============ */
+/* Product recap card */
+.confirm-product-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(229, 9, 20, 0.08));
+  border: 1px solid rgba(139, 92, 246, 0.25);
+}
+.confirm-product-img {
+  width: 62px;
+  height: 62px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #fff;
+  flex-shrink: 0;
+}
+.confirm-product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.confirm-product-info strong {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+}
+.confirm-product-qty {
+  font-size: 13px;
+  color: #c4b5fd;
+  font-weight: 700;
+}
+.confirm-product-price {
+  font-size: 13px;
+  color: #bfc0c5;
+}
+.confirm-product-badge {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 800;
+  color: #063;
+  background: #2fffc8;
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* Delivery data box with icons */
+.confirm-data-box {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.confirm-data-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.confirm-data-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #bfc0c5;
+}
+.confirm-edit-btn {
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  background: rgba(139, 92, 246, 0.12);
+  color: #c4b5fd;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+.confirm-edit-btn:hover { background: rgba(139, 92, 246, 0.22); }
+.confirm-edit-btn:active { transform: scale(0.96); }
+.confirm-data-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.confirm-data-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.confirm-data-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(139, 92, 246, 0.14);
+  color: #c4b5fd;
+}
+.confirm-data-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.confirm-data-text small {
+  font-size: 11px;
+  color: #a9a3ad;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.confirm-data-text strong {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  word-break: break-word;
+}
+
+/* Payment summary box */
+.confirm-pay-box {
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.confirm-pay-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #bfc0c5;
+  margin-bottom: 10px;
+}
+.confirm-pay-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #d8d4de;
+  padding: 6px 0;
+}
+.confirm-pay-row .confirm-free { color: #2fffc8; font-weight: 800; }
+.confirm-pay-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+}
+.confirm-pay-total span {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+}
+.confirm-pay-total strong {
+  font-size: 26px;
+  font-weight: 900;
+  color: #fff200;
+  line-height: 1;
+}
+.confirm-pay-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.pay-tag {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 11px;
+  border-radius: 999px;
+}
+.pay-tag-green { background: rgba(47, 255, 200, 0.14); color: #2fffc8; }
+.pay-tag-blue { background: rgba(96, 165, 250, 0.16); color: #93c5fd; }
+
+/* Highlighted confirm checkbox box */
+.confirm-check-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.confirm-check-box.is-checked {
+  border-color: #2fffc8;
+  background: rgba(47, 255, 200, 0.08);
+}
+.confirm-check-box input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.confirm-check-mark {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.confirm-check-box.is-checked .confirm-check-mark {
+  background: #2fffc8;
+  border-color: #2fffc8;
+  color: #063;
+}
+.confirm-check-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e6e2ec;
+  line-height: 1.35;
+}
+.confirm-check-text strong { color: #fff; font-weight: 800; }
+
+/* Trust badges row */
+.confirm-trust-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 16px;
+  margin-top: 14px;
+}
+.confirm-trust-item {
+  font-size: 12px;
+  font-weight: 700;
+  color: #a9a3ad;
+}
+
 /* Submit action wrapper */
 .submit-action-wrapper {
   display: grid;

@@ -741,6 +741,8 @@ function updateStep3Summary() {
   if (summaryQtyDisplay) summaryQtyDisplay.textContent = getQuantityText(q);
   if (summaryUnitPriceDisplay) summaryUnitPriceDisplay.textContent = formatGuarani(CONFIG.productPrice);
   if (summaryTotalDisplay) summaryTotalDisplay.textContent = formatGuarani(p);
+  const summaryTotalNet = document.querySelector('#summaryTotalNet');
+  if (summaryTotalNet) summaryTotalNet.textContent = formatGuarani(p);
 }
 
 // Todos los botones/enlaces que apuntan a #checkout abren el checkout.
@@ -882,6 +884,13 @@ function setupWhatsAppTracking() {
 // Enable confirm button when checkbox is checked
 document.querySelector('#confirmDataCheck')?.addEventListener('change', function() {
   if (confirmOrderBtn) confirmOrderBtn.disabled = !this.checked;
+  this.closest('.confirm-check-box')?.classList.toggle('is-checked', this.checked);
+});
+
+// "Editar" button in confirmation step → back to step 1
+document.querySelector('#editDataBtn')?.addEventListener('click', () => {
+  clearStepErrors();
+  showStep(1);
 });
 
 orderForms.forEach((form) => form.addEventListener('submit', async (event) => {
