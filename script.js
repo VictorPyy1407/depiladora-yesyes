@@ -2,12 +2,12 @@ const thumbs = document.querySelectorAll('.thumb');
 const mainImage = document.querySelector('#mainProductImage');
 const CONFIG = {
   productName: 'Depiladora YES',
-  productPrice: 149000,
+  productPrice: 145000,
   currency: 'PYG',
   metaPixelId: '2412226475899711',
   origin: 'landing_depiladora_yes',
   supabaseUrl: 'https://roruinqorwgolcrhhmpm.supabase.co',
-  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvcnVpbnFvcndnb2xjcmhobXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NTU0MDcsImV4cCI6MjA5ODIzMTQwN30.VzNSqYUM6amTOToZUsJ7Emjapy-y9Y44hDmbC1XG9Eg',
+  supabaseAnonKey: 'sb_publishable_aRPb1yNunMEheat00BxwtQ_Uft732KJ',
   supabaseTable: 'pedidos_web',
 };
 
@@ -71,14 +71,52 @@ const checkoutPage = document.querySelector('[data-page="checkout"]');
 const buyButton = document.querySelector('#pedido');
 const backLink = document.querySelector('.back-link');
 const closeCheckout = document.querySelector('.checkout-close');
-const quantitySelect = document.querySelector('#quantitySelect');
+
 const productPriceTop = document.querySelector('#productPriceTop');
 const summaryQuantityText = document.querySelector('#summaryQuantityText');
 const summaryQuantity = document.querySelector('#summaryQuantity');
 const summaryUnitPrice = document.querySelector('#summaryUnitPrice');
 const summaryTotal = document.querySelector('#summaryTotal');
 const summaryProfit = document.querySelector('#summaryProfit');
-const cityInput = document.querySelector('#cityInput');
+const citySelect = document.querySelector('#citySelect');
+const neighborhoodInput = document.querySelector('#neighborhoodInput');
+const addressInput = document.querySelector('#addressInput');
+const referenceInput = document.querySelector('#referenceInput');
+const observationsInput = document.querySelector('#observationsInput');
+const nameInput = document.querySelector('#nameInput');
+const phoneInput = document.querySelector('#phoneInput');
+const mapsInput = document.querySelector('#mapsInput');
+const qtyMinus = document.querySelector('#qtyMinus');
+const qtyPlus = document.querySelector('#qtyPlus');
+const qtyNumber = document.querySelector('#qtyNumber');
+const summaryQtyDisplay = document.querySelector('#summaryQtyDisplay');
+const summaryUnitPriceDisplay = document.querySelector('#summaryUnitPriceDisplay');
+const summaryShippingDisplay = document.querySelector('#summaryShippingDisplay');
+const summaryTotalDisplay = document.querySelector('#summaryTotalDisplay');
+const confirmationProductName = document.querySelector('#confirmationProductName');
+const confirmationProductImg = document.querySelector('#confirmationProductImg');
+const confirmationProductQty = document.querySelector('#confirmationProductQty');
+const confUnitPrice = document.querySelector('#confUnitPrice');
+const confShipping = document.querySelector('#confShipping');
+const confTotal = document.querySelector('#confTotal');
+const confName = document.querySelector('#confName');
+const confPhone = document.querySelector('#confPhone');
+const confCity = document.querySelector('#confCity');
+const confAddress = document.querySelector('#confAddress');
+const whatsappSuccessBtn = document.querySelector('#whatsappSuccessBtn');
+const nextStepBtn = document.querySelector('#nextStepBtn');
+const prevStepBtn = document.querySelector('#prevStepBtn');
+  const step1 = document.querySelector('#step1Container');
+  const step2 = document.querySelector('#step2Container');
+  const step3 = document.querySelector('#step3Container');
+const checkoutLoader = document.querySelector('#checkoutLoader');
+const sumCustomerName = document.querySelector('#sumCustomerName');
+const sumCustomerPhone = document.querySelector('#sumCustomerPhone');
+const sumCustomerLocation = document.querySelector('#sumCustomerLocation');
+const sumCustomerAddress = document.querySelector('#sumCustomerAddress');
+const sumCustomerReference = document.querySelector('#sumCustomerReference');
+const confirmOrderBtn = document.querySelector('#confirmOrderBtn');
+
 const deliveryNotice = document.querySelector('#deliveryNotice');
 const paymentNote = document.querySelector('#paymentNote');
 const formError = document.querySelector('#formError');
@@ -87,13 +125,15 @@ let map;
 let mapMarker;
 let selectedMapLink = '';
 let activeMapInput = null;
+let currentQuantity = 1;
+
 const pricesByQuantity = {
-  1: 149000,
-  2: 298000,
-  3: 447000,
+  1: 145000,
+  2: 290000,
+  3: 435000,
 };
 
-function trackingPayload(quantity = Number(document.querySelector('#quantitySelect')?.value || 1)) {
+function trackingPayload(quantity = currentQuantity) {
   const subtotal = pricesByQuantity[quantity] || pricesByQuantity[1] || CONFIG.productPrice;
   return {
     producto: CONFIG.productName,
@@ -185,13 +225,21 @@ function trackLandingEvent(eventName, payload = trackingPayload()) {
       fireTracking('ga4:begin_checkout', () => trackGA('begin_checkout', payload));
       fireTracking('meta:InitiateCheckout', () => trackMeta('InitiateCheckout', payload));
     },
+    add_payment_info: () => {
+      fireTracking('ga4:add_payment_info', () => trackGA('add_payment_info', payload));
+      fireTracking('meta:AddPaymentInfo', () => trackMeta('AddPaymentInfo', payload));
+    },
     lead: () => {
       fireTracking('ga4:generate_lead', () => trackGA('generate_lead', payload));
       fireTracking('meta:Lead', () => trackMeta('Lead', payload));
     },
     purchase: () => {
-      trackGA('purchase', payload);
-      trackMeta('Purchase', payload);
+      fireTracking('ga4:purchase', () => trackGA('purchase', payload));
+      fireTracking('meta:Purchase', () => trackMeta('Purchase', payload));
+    },
+    contact: () => {
+      fireTracking('ga4:contact', () => trackGA('contact', payload));
+      fireTracking('meta:Contact', () => trackMeta('Contact', payload));
     },
   };
   events[eventName]?.();
@@ -206,19 +254,57 @@ function getQuantityText(quantity) {
 }
 
 function updateOrderSummary() {
-  if (!quantitySelect) return;
-
-  const quantity = Number(quantitySelect.value || 1);
+  const quantity = currentQuantity;
   const price = pricesByQuantity[quantity] || pricesByQuantity[1];
   const quantityText = getQuantityText(quantity);
   const totalText = formatGuarani(price);
+  const unitPriceText = formatGuarani(CONFIG.productPrice);
 
+  if (qtyNumber) qtyNumber.textContent = quantity;
   if (productPriceTop) productPriceTop.textContent = totalText;
-  if (summaryUnitPrice) summaryUnitPrice.textContent = formatGuarani(CONFIG.productPrice);
+  if (summaryUnitPrice) summaryUnitPrice.textContent = unitPriceText;
   if (summaryQuantityText) summaryQuantityText.textContent = quantityText;
   if (summaryQuantity) summaryQuantity.textContent = quantityText;
   if (summaryTotal) summaryTotal.textContent = totalText;
+  if (summaryUnitPriceDisplay) summaryUnitPriceDisplay.textContent = unitPriceText;
+  if (summaryQtyDisplay) summaryQtyDisplay.textContent = quantityText;
+  if (summaryTotalDisplay) summaryTotalDisplay.textContent = totalText;
   if (summaryProfit) summaryProfit.textContent = 'Se calcula en Panel Admin';
+}
+
+function updateCheckoutSummary() {
+  const quantity = currentQuantity;
+  const price = pricesByQuantity[quantity] || pricesByQuantity[1];
+  const totalText = formatGuarani(price);
+  const unitPriceText = formatGuarani(CONFIG.productPrice);
+  if (summaryUnitPriceDisplay) summaryUnitPriceDisplay.textContent = unitPriceText;
+  if (summaryQtyDisplay) summaryQtyDisplay.textContent = getQuantityText(quantity);
+  if (summaryTotalDisplay) summaryTotalDisplay.textContent = totalText;
+}
+
+function setupQtyStepper() {
+  if (qtyMinus) {
+    qtyMinus.addEventListener('click', () => {
+      if (currentQuantity > 1) {
+        currentQuantity--;
+        updateOrderSummary();
+        updateStep3Summary();
+        updateDeliveryNotice();
+        saveFormDataToLocalStorage();
+      }
+    });
+  }
+  if (qtyPlus) {
+    qtyPlus.addEventListener('click', () => {
+      if (currentQuantity < 3) {
+        currentQuantity++;
+        updateOrderSummary();
+        updateStep3Summary();
+        updateDeliveryNotice();
+        saveFormDataToLocalStorage();
+      }
+    });
+  }
 }
 
 function updateFooterSummary() {
@@ -241,7 +327,7 @@ function updateFooterSummary() {
 
 function isCashOnDeliveryArea(value) {
   const city = value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const centralCities = ['asuncion', 'central', 'san lorenzo', 'fernando de la mora', 'luque', 'capitata', 'capiata', 'lambare', 'mariano roque alonso', 'nemby', 'ñemby', 'villa elisa', 'san antonio', 'limpio', 'itaugua', 'ita', 'aregua', 'ypane', 'yaguaron'];
+  const centralCities = ['asuncion', 'central', 'san lorenzo', 'fernando de la mora', 'luque', 'capitata', 'capiata', 'lambare', 'mariano roque alonso', 'nemby', '├▒emby', 'villa elisa', 'san antonio', 'limpio', 'itaugua', 'ita', 'aregua', 'ypane', 'yaguaron'];
 
   return centralCities.some((area) => city.includes(area.normalize('NFD').replace(/[\u0300-\u036f]/g, '')));
 }
@@ -253,32 +339,33 @@ function cleanText(value, fallback = '') {
 
 function getDeliveryZone(city) {
   if (!city) return 'No informado';
-  return isCashOnDeliveryArea(city) ? 'Asunción/Central' : 'Interior';
+  return isCashOnDeliveryArea(city) ? 'Asunci├│n/Central' : 'Interior';
 }
 
 function updateDeliveryNotice() {
-  if (!cityInput || !deliveryNotice || !paymentNote) return;
+  if (!citySelect || !deliveryNotice) return;
 
-  const value = cityInput.value.trim();
-  const isKnownCashArea = value && isCashOnDeliveryArea(value);
-
-  deliveryNotice.classList.toggle('delivery-ok', Boolean(isKnownCashArea));
-  deliveryNotice.classList.toggle('delivery-interior', Boolean(value && !isKnownCashArea));
-
+  const value = citySelect.value;
   if (!value) {
-    deliveryNotice.textContent = 'Asunción y Central: envío gratis y pago contra entrega. Interior: se coordina antes del despacho.';
-    paymentNote.textContent = 'Asunción y Central: no pagás nada ahora, abonás al recibir.';
+    deliveryNotice.textContent = 'Seleccioná una ciudad para ver los detalles de envío.';
+    deliveryNotice.className = 'delivery-notice';
+    if (summaryShippingDisplay) { summaryShippingDisplay.textContent = 'Según ciudad'; summaryShippingDisplay.className = 'summary-value'; }
     return;
   }
+
+  const isKnownCashArea = isCashOnDeliveryArea(value);
 
   if (isKnownCashArea) {
-    deliveryNotice.textContent = 'Zona habilitada para envío gratis y pago contra entrega. No abonás nada ahora.';
-    paymentNote.textContent = 'No pagás nada ahora, abonás al recibir.';
-    return;
+    deliveryNotice.textContent = 'Pago contra entrega disponible en esta zona.';
+    deliveryNotice.className = 'delivery-notice delivery-ok';
+    if (paymentNote) paymentNote.textContent = 'No pagás nada ahora, abonás al recibir.';
+    if (summaryShippingDisplay) { summaryShippingDisplay.textContent = 'Gratis'; summaryShippingDisplay.className = 'summary-value shipping-value'; }
+  } else {
+    deliveryNotice.textContent = 'Coordinaremos el envío y la forma de pago por WhatsApp.';
+    deliveryNotice.className = 'delivery-notice delivery-interior';
+    if (paymentNote) paymentNote.textContent = 'Coordinaremos el envío y el medio de pago por WhatsApp.';
+    if (summaryShippingDisplay) { summaryShippingDisplay.textContent = 'A coordinar'; summaryShippingDisplay.className = 'summary-value'; }
   }
-
-  deliveryNotice.textContent = 'Para envíos al interior se coordina una seña previa antes del despacho.';
-  paymentNote.textContent = 'Interior: se coordina una seña previa y el saldo al recibir.';
 }
 
 function setDeliveryNoticeText(notice, value) {
@@ -289,13 +376,13 @@ function setDeliveryNoticeText(notice, value) {
   notice.classList.toggle('delivery-interior', Boolean(value && !isKnownCashArea));
 
   if (!value) {
-    notice.textContent = 'Asunción y Central: envío gratis y pago contra entrega. Interior: se coordina antes del despacho.';
+    notice.textContent = 'Asunci├│n y Central: env├¡o gratis y pago contra entrega. Interior: se coordina antes del despacho.';
     return;
   }
 
   notice.textContent = isKnownCashArea
-    ? 'Zona habilitada para envío gratis y pago contra entrega. No abonás nada ahora.'
-    : 'Para envíos al interior se coordina una seña previa antes del despacho.';
+    ? 'Zona habilitada para env├¡o gratis y pago contra entrega. No abon├ís nada ahora.'
+    : 'Para env├¡os al interior se coordina una se├▒a previa antes del despacho.';
 }
 
 function initFormDeliveryNotices() {
@@ -372,23 +459,23 @@ async function searchMapLocation() {
   const query = mapSearch?.value.trim();
 
   if (!query) {
-    if (mapError) mapError.textContent = 'Escribí una dirección o lugar para buscar.';
+    if (mapError) mapError.textContent = 'Escrib├¡ una direcci├│n o lugar para buscar.';
     return;
   }
 
-  if (mapError) mapError.textContent = 'Buscando ubicación...';
+  if (mapError) mapError.textContent = 'Buscando ubicaci├│n...';
   try {
     const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(`${query}, Paraguay`)}`);
     const results = await response.json();
     if (!results.length) {
-      if (mapError) mapError.textContent = 'No encontramos esa dirección. Probá con otra referencia.';
+      if (mapError) mapError.textContent = 'No encontramos esa direcci├│n. Prob├í con otra referencia.';
       return;
     }
 
     updateMapLocation(Number(results[0].lat), Number(results[0].lon), 17);
-    if (mapError) mapError.textContent = 'Tocá el mapa o arrastrá el pin para ajustar la ubicación exacta.';
+    if (mapError) mapError.textContent = 'Toc├í el mapa o arrastr├í el pin para ajustar la ubicaci├│n exacta.';
   } catch (error) {
-    if (mapError) mapError.textContent = 'No se pudo buscar. Tocá directamente el mapa para marcar la ubicación.';
+    if (mapError) mapError.textContent = 'No se pudo buscar. Toc├í directamente el mapa para marcar la ubicaci├│n.';
   }
 }
 
@@ -437,7 +524,12 @@ function showProduct() {
 }
 
 function generateOrderNumber() {
-  return `#PY${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 90 + 10)}`;
+  const date = new Date();
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  const seq = String(Math.floor(Math.random() * 90000) + 10000);
+  return `VG-${y}${m}${d}-${seq}`;
 }
 
 function getComboName(quantity) {
@@ -450,7 +542,45 @@ function saveOrder(order) {
   localStorage.setItem('bagOrders', JSON.stringify(orders));
 }
 
+function buildSupabasePayload(order) {
+  // La tabla compartida `pedidos_web` solo tiene el conjunto base de columnas.
+  // Los datos extra (barrio, observaciones, envío, UTM, dispositivo) se guardan
+  // dentro de `referencia` para no perder información ni romper el insert.
+  const refParts = [];
+  if (order.barrio) refParts.push(`Barrio: ${order.barrio}`);
+  if (order.referencia) refParts.push(`Ref: ${order.referencia}`);
+  if (order.observaciones) refParts.push(`Obs: ${order.observaciones}`);
+  refParts.push(order.costo_envio === 0
+    ? 'Envío gratis · Pago contra entrega'
+    : 'Interior · Coordinar envío y pago por WhatsApp');
+  const utm = [order.utm_source, order.utm_medium, order.utm_campaign].filter(Boolean).join('/');
+  if (utm) refParts.push(`UTM: ${utm}`);
+  if (order.dispositivo || order.device_type) refParts.push(`Disp: ${order.dispositivo || order.device_type}`);
+
+  return {
+    id: order.id || order.numero_pedido,
+    producto: order.producto || order.producto_nombre,
+    precio: order.precio_unitario || order.precio,
+    cantidad: order.cantidad,
+    subtotal: order.total || order.subtotal,
+    ganancia: order.ganancia || 0,
+    nombre: order.nombre || order.nombre_cliente,
+    telefono: order.telefono || order.telefono_whatsapp,
+    correo: 'No informado',
+    ci: 'No informado',
+    departamento: order.departamento || 'No informado',
+    ciudad: order.ciudad,
+    direccion: order.direccion || 'No informado',
+    referencia: refParts.join(' | ') || 'Sin referencia',
+    ubicacion_maps: order.ubicacion_maps || 'No informado',
+    estado: order.estado || 'Pendiente',
+    origen: order.origen || CONFIG.origin,
+    created_at: order.created_at || new Date().toISOString(),
+  };
+}
+
 async function saveOrderToSupabase(order) {
+  const payload = buildSupabasePayload(order);
   const response = await fetch(`${CONFIG.supabaseUrl}/rest/v1/${CONFIG.supabaseTable}`, {
     method: 'POST',
     headers: {
@@ -459,7 +589,7 @@ async function saveOrderToSupabase(order) {
       'Content-Type': 'application/json',
       Prefer: 'return=minimal',
     },
-    body: JSON.stringify(order),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
@@ -470,11 +600,20 @@ async function saveOrderToSupabase(order) {
 
 function showConfirmation(order) {
   if (orderNumber) orderNumber.textContent = order.id;
-  if (confirmationPhone) confirmationPhone.textContent = order.phone || '---';
-  if (confirmationPaymentText) {
-    confirmationPaymentText.innerHTML = order.paymentMode === 'cash_on_delivery'
-      ? `Recordá que el pago se realiza al recibir el producto. Te hablaremos al número <strong>${order.phone || '---'}</strong>.`
-      : `Para envíos al interior coordinaremos una seña previa. Te hablaremos al número <strong>${order.phone || '---'}</strong>.`;
+  if (confirmationProductName) confirmationProductName.textContent = CONFIG.productName;
+  if (confirmationProductImg) confirmationProductImg.src = 'IMG/Inicio1.png';
+  if (confirmationProductQty) confirmationProductQty.textContent = getQuantityText(order.cantidad || currentQuantity);
+  if (confUnitPrice) confUnitPrice.textContent = formatGuarani(CONFIG.productPrice);
+  if (confShipping) confShipping.textContent = order.total >= 145000 ? 'Gratis' : 'A coordinar';
+  if (confTotal) confTotal.textContent = formatGuarani(order.total || pricesByQuantity[currentQuantity]);
+  if (confName) confName.textContent = order.nombre || '—';
+  if (confPhone) confPhone.textContent = order.phone || '—';
+  if (confCity) confCity.textContent = order.ciudad || '—';
+  if (confAddress) confAddress.textContent = order.direccion || '—';
+
+  if (whatsappSuccessBtn) {
+    const msg = encodeURIComponent(`Hola, realicé el pedido ${order.id} de ${CONFIG.productName}. Quiero confirmar mis datos para la entrega.`);
+    whatsappSuccessBtn.href = `https://wa.me/595972738779?text=${msg}`;
   }
 
   if (productPage) productPage.hidden = true;
@@ -490,10 +629,129 @@ function closeConfirmation() {
   showProduct();
 }
 
-buyButton?.addEventListener('click', (event) => {
-  event.preventDefault();
-  trackLandingEvent('add_to_cart');
-  showCheckout();
+// Step navigation
+let currentStep = 1;
+
+function showStep(step) {
+  [step1, step2, step3].forEach((el, i) => {
+    if (!el) return;
+    el.classList.toggle('hidden', i + 1 !== step);
+  });
+  if (prevStepBtn) prevStepBtn.classList.toggle('hidden', step === 1);
+  if (nextStepBtn) {
+    if (step === 3) {
+      nextStepBtn.classList.add('hidden');
+    } else {
+      nextStepBtn.classList.remove('hidden');
+    }
+  }
+  currentStep = step;
+}
+
+function validateCurrentStep() {
+  if (currentStep === 1) {
+    if (!nameInput?.value?.trim()) { document.querySelector('#nameError').textContent = 'Ingresá tu nombre.'; nameInput?.focus(); return false; }
+    if (!phoneInput?.value?.trim()) { document.querySelector('#phoneError').textContent = 'Ingresá tu WhatsApp.'; phoneInput?.focus(); return false; }
+    return true;
+  }
+  if (currentStep === 2) {
+    if (!citySelect?.value) { document.querySelector('#cityError').textContent = 'Seleccioná tu ciudad.'; citySelect?.focus(); return false; }
+    if (!addressInput?.value?.trim()) { document.querySelector('#addressError').textContent = 'Ingresá tu dirección.'; addressInput?.focus(); return false; }
+    return true;
+  }
+  return true;
+}
+
+function clearStepErrors() {
+  document.querySelectorAll('.field-error').forEach(el => el.textContent = '');
+}
+
+if (nextStepBtn) {
+  nextStepBtn.addEventListener('click', () => {
+    clearStepErrors();
+    if (validateCurrentStep()) {
+      showStep(currentStep + 1);
+      if (currentStep === 3) updateStep3Summary();
+    }
+  });
+}
+
+if (prevStepBtn) {
+  prevStepBtn.addEventListener('click', () => {
+    clearStepErrors();
+    if (currentStep > 1) showStep(currentStep - 1);
+  });
+}
+
+const STORAGE_KEYS = {
+  name: 'checkout_name',
+  phone: 'checkout_phone',
+  city: 'checkout_city',
+  neighborhood: 'checkout_neighborhood',
+  address: 'checkout_address',
+  reference: 'checkout_reference',
+  observations: 'checkout_observations',
+  maps: 'checkout_maps'
+};
+
+function saveFormDataToLocalStorage() {
+  if (nameInput) localStorage.setItem(STORAGE_KEYS.name, nameInput.value);
+  if (phoneInput) localStorage.setItem(STORAGE_KEYS.phone, phoneInput.value);
+  if (citySelect) localStorage.setItem(STORAGE_KEYS.city, citySelect.value);
+  if (neighborhoodInput) localStorage.setItem(STORAGE_KEYS.neighborhood, neighborhoodInput.value);
+  if (addressInput) localStorage.setItem(STORAGE_KEYS.address, addressInput.value);
+  if (referenceInput) localStorage.setItem(STORAGE_KEYS.reference, referenceInput.value);
+  if (observationsInput) localStorage.setItem(STORAGE_KEYS.observations, observationsInput.value);
+  if (mapsInput) localStorage.setItem(STORAGE_KEYS.maps, mapsInput.value);
+}
+
+function loadFormDataFromLocalStorage() {
+  if (nameInput) nameInput.value = localStorage.getItem(STORAGE_KEYS.name) || '';
+  if (phoneInput) phoneInput.value = localStorage.getItem(STORAGE_KEYS.phone) || '';
+  if (citySelect) {
+    citySelect.value = localStorage.getItem(STORAGE_KEYS.city) || '';
+    handleCitySelectChange();
+  }
+  if (neighborhoodInput) neighborhoodInput.value = localStorage.getItem(STORAGE_KEYS.neighborhood) || '';
+  if (addressInput) addressInput.value = localStorage.getItem(STORAGE_KEYS.address) || '';
+  if (referenceInput) referenceInput.value = localStorage.getItem(STORAGE_KEYS.reference) || '';
+  if (observationsInput) observationsInput.value = localStorage.getItem(STORAGE_KEYS.observations) || '';
+  if (mapsInput) mapsInput.value = localStorage.getItem(STORAGE_KEYS.maps) || '';
+}
+
+function handleCitySelectChange() {
+  updateDeliveryNotice();
+  saveFormDataToLocalStorage();
+}
+
+function updateStep3Summary() {
+  if (sumCustomerName) sumCustomerName.textContent = nameInput?.value || '—';
+  if (sumCustomerPhone) sumCustomerPhone.textContent = phoneInput?.value || '—';
+
+  const selectedCity = citySelect?.value || '';
+  const neighborhood = neighborhoodInput?.value;
+  const locationText = selectedCity + (neighborhood ? `, ${neighborhood}` : '');
+  if (sumCustomerLocation) sumCustomerLocation.textContent = locationText || '—';
+
+  if (sumCustomerAddress) sumCustomerAddress.textContent = addressInput?.value || '—';
+  if (sumCustomerReference) sumCustomerReference.textContent = referenceInput?.value || 'Sin referencia';
+
+  const q = currentQuantity;
+  const p = pricesByQuantity[q] || pricesByQuantity[1];
+  if (summaryQtyDisplay) summaryQtyDisplay.textContent = getQuantityText(q);
+  if (summaryUnitPriceDisplay) summaryUnitPriceDisplay.textContent = formatGuarani(CONFIG.productPrice);
+  if (summaryTotalDisplay) summaryTotalDisplay.textContent = formatGuarani(p);
+}
+
+// Todos los botones/enlaces que apuntan a #checkout abren el checkout.
+// (El botón del header y otros CTAs solo tenían el ancla y no abrían nada.)
+document.querySelectorAll('a[href="#checkout"]').forEach((link) => {
+  if (link.id === 'floatCta') return; // el flotante se maneja aparte (scroll)
+  link.addEventListener('click', (event) => {
+    event.preventDefault();
+    trackLandingEvent('add_to_cart');
+    showCheckout();
+  });
 });
 
 backLink?.addEventListener('click', (event) => {
@@ -506,58 +764,125 @@ document.querySelector('[data-close-confirmation]')?.addEventListener('click', c
 confirmation?.addEventListener('click', (event) => {
   if (event.target.id === 'confirmation') closeConfirmation();
 });
-quantitySelect?.addEventListener('change', updateOrderSummary);
-document.querySelector('#footerQuantitySelect')?.addEventListener('change', updateFooterSummary);
-cityInput?.addEventListener('input', updateDeliveryNotice);
+citySelect?.addEventListener('change', handleCitySelectChange);
 updateOrderSummary();
-updateFooterSummary();
 updateDeliveryNotice();
 initMapPicker();
-initFormDeliveryNotices();
+setupInputAutoSave();
+setupQtyStepper();
+loadFormDataFromLocalStorage();
+setupWhatsAppTracking();
 trackLandingEvent('page_view');
 trackLandingEvent('view_item');
 
-  // Visitor tracking
-  (function () {
-    const cfg = CONFIG;
-    const SUPABASE_URL = cfg.supabaseUrl;
-    const SUPABASE_KEY = cfg.supabaseAnonKey;
-    const TRACK_URL = `${SUPABASE_URL}/functions/v1/track-visitor`;
-    let sessionId = sessionStorage.getItem('lp_session_id') || 'sess_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now().toString(36);
-    sessionStorage.setItem('lp_session_id', sessionId);
-    let hbInterval = null;
-    let hidden = false;
+// Visitor tracking
+(function () {
+  const cfg = CONFIG;
+  const SUPABASE_URL = cfg.supabaseUrl;
+  const SUPABASE_KEY = cfg.supabaseAnonKey;
+  const TRACK_URL = `${SUPABASE_URL}/functions/v1/track-visitor`;
+  let sessionId = sessionStorage.getItem('lp_session_id') || 'sess_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now().toString(36);
+  sessionStorage.setItem('lp_session_id', sessionId);
+  let hbInterval = null;
+  let hidden = false;
 
-    function send(event, extra = {}) {
-      if (!SUPABASE_URL || !SUPABASE_KEY) return;
-      const params = new URLSearchParams(window.location.search);
-      fetch(TRACK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
-        body: JSON.stringify({
-          event, sessionId, pageUrl: location.href, pageTitle: document.title,
-          referrer: document.referrer, userAgent: navigator.userAgent,
-          screenResolution: `${screen.width}x${screen.height}`, viewport: `${innerWidth}x${innerHeight}`,
-          landingPage: cfg.origin, timestamp: new Date().toISOString(),
-          utmSource: params.get('utm_source'), utmMedium: params.get('utm_medium'),
-          utmCampaign: params.get('utm_campaign'), utmContent: params.get('utm_content'),
-          utmTerm: params.get('utm_term'), ...extra
-        }),
-        keepalive: event === 'page_hide'
-      }).catch(() => {});
+  function send(event, extra = {}) {
+    if (!SUPABASE_URL || !SUPABASE_KEY) return;
+    const params = new URLSearchParams(window.location.search);
+    fetch(TRACK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({
+        event, sessionId, pageUrl: location.href, pageTitle: document.title,
+        referrer: document.referrer, userAgent: navigator.userAgent,
+        screenResolution: `${screen.width}x${screen.height}`, viewport: `${innerWidth}x${innerHeight}`,
+        landingPage: cfg.origin, timestamp: new Date().toISOString(),
+        utmSource: params.get('utm_source'), utmMedium: params.get('utm_medium'),
+        utmCampaign: params.get('utm_campaign'), utmContent: params.get('utm_content'),
+        utmTerm: params.get('utm_term'), ...extra
+      }),
+      keepalive: event === 'page_hide'
+    }).catch(() => { });
+  }
+
+  function startHb() { if (!hbInterval) hbInterval = setInterval(() => { if (!hidden && document.visibilityState === 'visible') send('heartbeat'); }, 30000); }
+  function stopHb() { if (hbInterval) { clearInterval(hbInterval); hbInterval = null; } }
+  document.addEventListener('visibilitychange', () => { hidden = document.hidden; if (hidden) { send('page_hide'); stopHb(); } else { send('page_view'); startHb(); } });
+  window.addEventListener('beforeunload', () => send('page_hide'));
+  window.addEventListener('pagehide', () => send('page_hide'));
+
+  send('page_view');
+  startHb();
+
+  window.VisitorTracker = { trackEvent: send, trackEcommerce: (evt, data) => send(evt, { productName: data?.productName || cfg.productName, productPrice: data?.productPrice || cfg.productPrice, orderId: data?.orderId, revenue: data?.revenue }), getSessionId: () => sessionId };
+})();
+
+function setupInputAutoSave() {
+  const inputs = [nameInput, phoneInput, citySelect, neighborhoodInput, addressInput, referenceInput, observationsInput, mapsInput].filter(Boolean);
+  inputs.forEach(input => {
+    input.addEventListener('input', saveFormDataToLocalStorage);
+    if (input.tagName === 'SELECT') {
+      input.addEventListener('change', saveFormDataToLocalStorage);
     }
+  });
+}
 
-    function startHb() { if (!hbInterval) hbInterval = setInterval(() => { if (!hidden && document.visibilityState === 'visible') send('heartbeat'); }, 30000); }
-    function stopHb() { if (hbInterval) { clearInterval(hbInterval); hbInterval = null; } }
-    document.addEventListener('visibilitychange', () => { hidden = document.hidden; if (hidden) { send('page_hide'); stopHb(); } else { send('page_view'); startHb(); } });
-    window.addEventListener('beforeunload', () => send('page_hide'));
-    window.addEventListener('pagehide', () => send('page_hide'));
+async function sendTelegramNotification(order) {
+  const token = CONFIG.telegramBotToken;
+  const chatId = CONFIG.telegramChatId;
+  if (!token || !chatId) {
+    console.log("Telegram notification skipped: Bot token or Chat ID not configured.");
+    return;
+  }
+  const dateStr = new Date(order.created_at).toLocaleString('es-PY', { timeZone: 'America/Asuncion' });
+  const message = [
+    "🛒 *NUEVO PEDIDO*",
+    `Pedido: ${order.id || order.numero_pedido}`,
+    `Producto: ${order.producto_nombre || order.producto}`,
+    `Cantidad: ${order.cantidad}`,
+    `Precio unitario: ${formatGuarani(order.precio_unitario || order.precio)}`,
+    `Envío: ${order.costo_envio === 0 ? 'Gratis' : formatGuarani(order.costo_envio)}`,
+    `Total: ${formatGuarani(order.total || order.subtotal)}`,
+    `Cliente: ${order.nombre_cliente || order.nombre}`,
+    `WhatsApp: ${order.telefono_whatsapp || order.telefono}`,
+    `Ciudad: ${order.ciudad}`,
+    `Barrio: ${order.barrio || '—'}`,
+    `Dirección: ${order.direccion}`,
+    `Referencia: ${order.referencia || '—'}`,
+    `Ubicación: ${order.ubicacion_maps || '—'}`,
+    `Observaciones: ${order.observaciones || '—'}`,
+    `Estado: Pendiente de confirmación`,
+    `Fecha: ${dateStr}`,
+    `Fuente: ${order.utm_source || 'Directo'}`
+  ].join('\n');
 
-    send('page_view');
-    startHb();
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message,
+        parse_mode: 'Markdown'
+      })
+    });
+  } catch (err) {
+    console.error("Failed to send Telegram notification from client:", err);
+  }
+}
 
-    window.VisitorTracker = { trackEvent: send, trackEcommerce: (evt, data) => send(evt, { productName: data?.productName || cfg.productName, productPrice: data?.productPrice || cfg.productPrice, orderId: data?.orderId, revenue: data?.revenue }), getSessionId: () => sessionId };
-  })();
+function setupWhatsAppTracking() {
+  document.querySelectorAll('a[href*="wa.me"]').forEach(link => {
+    link.addEventListener('click', () => {
+      trackLandingEvent('contact');
+    });
+  });
+}
+
+// Enable confirm button when checkbox is checked
+document.querySelector('#confirmDataCheck')?.addEventListener('change', function() {
+  if (confirmOrderBtn) confirmOrderBtn.disabled = !this.checked;
+});
 
 orderForms.forEach((form) => form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -567,75 +892,130 @@ orderForms.forEach((form) => form.addEventListener('submit', async (event) => {
   const submitButton = form.querySelector('button[type="submit"]');
   const currentFormError = form.querySelector('.form-error') || formError;
 
+  // Prevent double click
+  if (window._submitting) return;
+  window._submitting = true;
+
   const city = cleanText(formData.get('city'));
   const department = cleanText(formData.get('department'), getDeliveryZone(city));
   const address = cleanText(formData.get('address'), 'No informado');
   const neighborhood = cleanText(formData.get('neighborhood'));
   const notes = cleanText(formData.get('notes'));
+  const observations = cleanText(formData.get('observations'));
   const mapUrl = cleanText(formData.get('map'), 'No informado');
   const subtotal = pricesByQuantity[quantity] || pricesByQuantity[1];
   const paymentMode = isCashOnDeliveryArea(city) ? 'cash_on_delivery' : 'deposit_required_for_interior';
-  const referenceParts = [`Combo: ${getComboName(quantity)}`];
-  if (neighborhood) referenceParts.push(`Barrio: ${neighborhood}`);
-  if (notes) referenceParts.push(`Referencia: ${notes}`);
-  referenceParts.push(paymentMode === 'cash_on_delivery' ? 'Pago contra entrega' : 'Interior: coordinar seña previa');
+  const orderId = generateOrderNumber();
+  const shipping = isCashOnDeliveryArea(city) ? 0 : null;
+  const total = shipping === 0 ? subtotal : subtotal;
+
+  // Get UTM params
+  const params = new URLSearchParams(window.location.search);
+  const utmSource = params.get('utm_source') || '';
+  const utmMedium = params.get('utm_medium') || '';
+  const utmCampaign = params.get('utm_campaign') || '';
+  const utmContent = params.get('utm_content') || '';
+  const utmTerm = params.get('utm_term') || '';
+  const trafficSource = document.referrer ? 'referral' : 'direct';
+
+  // Get device type
+  const ua = navigator.userAgent;
+  const deviceType = /(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua) ? 'tablet' : /Mobile|Android|iPhone|iP(hone|od)|BlackBerry|IEMobile|Opera Mini/i.test(ua) ? 'mobile' : 'desktop';
+
+  // Get FBP/FBC from cookie
+  const getCookie = (name) => {
+    const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+    return match ? match[2] : '';
+  };
+  const fbp = getCookie('_fbp');
+  const fbc = getCookie('_fbc');
 
   const order = {
-    id: generateOrderNumber(),
+    id: orderId,
+    numero_pedido: orderId,
+    producto_id: CONFIG.origin,
+    producto_nombre: CONFIG.productName,
     producto: CONFIG.productName,
+    producto_imagen: 'IMG/Inicio1.png',
+    precio_unitario: CONFIG.productPrice,
     precio: CONFIG.productPrice,
     cantidad: quantity,
     subtotal,
+    costo_envio: shipping,
+    total,
     ganancia: 0,
+    nombre_cliente: cleanText(formData.get('name')),
     nombre: cleanText(formData.get('name')),
+    telefono_whatsapp: cleanText(formData.get('phone')),
     telefono: cleanText(formData.get('phone')),
-    correo: cleanText(formData.get('email'), 'No informado'),
-    ci: cleanText(formData.get('ci'), 'No informado'),
     departamento: department,
     ciudad: city,
+    barrio: neighborhood,
     direccion: address,
-    referencia: referenceParts.join(' | '),
+    referencia: notes,
     ubicacion_maps: mapUrl,
-    estado: 'Pendiente',
+    observaciones: observations,
+    estado: 'Pendiente de confirmación',
     origen: CONFIG.origin,
+    fuente_trafico: trafficSource,
+    pagina_origen: CONFIG.origin,
+    dispositivo: deviceType,
+    device_type: deviceType,
+    traffic_source: trafficSource,
+    utm_source: utmSource,
+    utm_medium: utmMedium,
+    utm_campaign: utmCampaign,
+    utm_content: utmContent,
+    utm_term: utmTerm,
+    meta_fbp: fbp,
+    meta_fbc: fbc,
     created_at: new Date().toISOString(),
   };
 
   if (currentFormError) currentFormError.textContent = '';
   if (submitButton) {
     submitButton.disabled = true;
-    submitButton.textContent = 'Enviando pedido...';
+    submitButton.textContent = 'Registrando pedido…';
   }
+  if (checkoutLoader) checkoutLoader.classList.remove('hidden');
 
   try {
     saveOrder(order);
     await saveOrderToSupabase(order);
-    const payload = { ...trackingPayload(quantity), transaction_id: order.id, value: order.subtotal };
+
+    const payload = { ...trackingPayload(quantity), transaction_id: order.id, value: total };
     trackLandingEvent('lead', payload);
     trackLandingEvent('purchase', payload);
+
+    sendTelegramNotification(order).catch(err => console.error('Telegram notification failed:', err));
+
+    Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
+
+    form.reset();
+    currentQuantity = 1;
+    if (submitButton) { submitButton.disabled = false; submitButton.textContent = 'Realizar pedido'; }
+    if (checkoutLoader) checkoutLoader.classList.add('hidden');
+
+    updateOrderSummary();
+    updateDeliveryNotice();
+
+    showConfirmation({
+      id: order.id,
+      phone: order.telefono,
+      nombre: order.nombre,
+      ciudad: order.ciudad,
+      direccion: order.direccion,
+      cantidad: order.cantidad,
+      total: order.total,
+    });
   } catch (error) {
     console.error(error);
-    if (currentFormError) currentFormError.textContent = 'No se pudo guardar el pedido. Revisá la conexión o la configuración de Supabase.';
-    if (submitButton) {
-      submitButton.disabled = false;
-      submitButton.textContent = 'Realizar pedido';
-    }
-    return;
+    if (currentFormError) currentFormError.textContent = 'Ocurrió un error al procesar tu pedido. Por favor, intentá nuevamente.';
+    if (submitButton) { submitButton.disabled = false; submitButton.textContent = 'Realizar pedido'; }
+    if (checkoutLoader) checkoutLoader.classList.add('hidden');
+  } finally {
+    window._submitting = false;
   }
-
-  form.reset();
-  updateOrderSummary();
-  updateFooterSummary();
-  updateDeliveryNotice();
-  if (submitButton) {
-    submitButton.disabled = false;
-    submitButton.textContent = 'Realizar pedido';
-  }
-  showConfirmation({
-    id: order.id,
-    phone: order.telefono,
-    paymentMode,
-  });
 }));
 
 // Floating CTA scroll behavior
@@ -661,10 +1041,3 @@ if (floatCta) {
   });
 }
 
-document.querySelectorAll('.final-buy').forEach((button) => {
-  button.addEventListener('click', (event) => {
-    event.preventDefault();
-    trackLandingEvent('add_to_cart');
-    showCheckout();
-  });
-});
